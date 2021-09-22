@@ -16,12 +16,15 @@ class Router {
         $controllerFilePath = "controller/$controllerName.controller.php";
 
         if(!file_exists($controllerFilePath)){
-            die("File for the Controller:\"$controllerName\" not found");
+            header("Location: /error404");
         }
 
-        /* require_once $controllerFilePath; */
         $controllerClassName = ucfirst($controllerName)."Controller";
         $this->controller = new $controllerClassName($route);
+    }
+
+    function render(){
+        return $this->controller->content;
     }
 }
 
