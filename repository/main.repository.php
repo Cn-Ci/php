@@ -6,7 +6,7 @@ class MainRepository {
         $this->entity= ucfirst($this->table);
         $this->db = null;
 
-        $this->relation = [];
+        $this->relations = [];
     }
 
     private function connect() {
@@ -91,7 +91,7 @@ class MainRepository {
     }
 
     function with($name){
-        $relationToAdd = $this->entity::$relation[$name];
+        $relationToAdd = $this->entity::$relations[$name];
         array_push($this->relations, $relationToAdd);
         return $this;
     }
