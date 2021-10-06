@@ -44,7 +44,7 @@ class ProductController extends BaseController {
                 header("Location: /product");
             }
 
-            if(isset($files['image_path']) && $files['image_page']['error'] == 0){
+            if(isset($files['image_path']) && $files['image_path']['error'] == 0){
                 $file = $files['image_path'];
                 $posted['image_path'] = str_replace("/temp","",$file['tmp_name']);
                 $bp = 0;
@@ -56,7 +56,7 @@ class ProductController extends BaseController {
                 $temp_image_path = implode('/', $temp_image_path);
             }
 
-            $repo =new MainRepository("category");
+            $repo =new MainRepository("product");
             $errors = $repo->validate($posted);
             if(count($errors) == 0){
                 $result = $repo->insertOne($posted);
@@ -74,8 +74,8 @@ class ProductController extends BaseController {
 
         $this->entities = ['categories' => $categories,
                             'errors' => $errors,
-                            'posted' => $posted ]
-        $this-render();
+                            'posted' => $posted ];
+        $this->render();
     }
 }
 

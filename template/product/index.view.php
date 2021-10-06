@@ -8,3 +8,6 @@
         </li>
     <?php } ?>
 </ul>
+
+
+<a href="product/create" class="btn btn-sm btn-success mb-3">Nouveau Produit</a>

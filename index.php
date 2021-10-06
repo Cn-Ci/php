@@ -35,6 +35,9 @@ $router = new Router($route);
 
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+
 <header>
     HEADER
 </header>
