@@ -3,7 +3,7 @@
 <ul>
     <?php foreach ($category->products as $product) {?>
         <li>
-            <?= $product->name?>
+            <a href="/product/read/<?= $product->id?>"><?= $product->name?></a>
         </li>
     <?php } ?>
 </ul>

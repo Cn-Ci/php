@@ -1,15 +1,22 @@
 <?php session_start();
 
 function autoload($className){
-    if (strpos($className,"Controller")){
+    if (strpos($className, "Controller")) {
         $fileName = lcfirst(str_replace("Controller", "", $className));
         require_once "controller/$fileName.controller.php";
-    } elseif (strpos($className,"Repository")){
+    }
+    else if (strpos($className, "Repository")){
         $fileName = lcfirst(str_replace("Repository", "", $className));
         require_once "repository/$fileName.repository.php";
-    } else {
+    } 
+    else {
         $fileName = lcfirst($className);
-        require_once "entity/$fileName.entity.php";
+        if(file_exists("entity/$fileName.entity.php")){
+            require_once "entity/$fileName.entity.php";
+        }
+        elseif (file_exists("helper/$fileName.helper.php")){
+            require_once "helper/$fileName.helper.php";
+        }
     }
 }
 spl_autoload_register("autoload");
@@ -39,7 +46,10 @@ $router = new Router($route);
 <link rel="stylesheet" href="/assets/css/style.css">
 
 <header>
-    HEADER
+    <?= isset($_SESSION['logged']) && $_SESSION['logged'] == true ? 
+        '<a href="/user/logout">Logout</a>' : 
+        '<a href="/user/login">Login</a>' ?>
+        <a href="/cart" class="ml-3">Panier</a>
 </header>
 <main>
     <?= $router->render() ?>

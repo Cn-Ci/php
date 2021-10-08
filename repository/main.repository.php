@@ -7,6 +7,7 @@ class MainRepository {
         $this->db = null;
 
         $this->relations = [];
+        $this->subRelations = [];
     }
 
     private function connect() {
@@ -40,29 +41,48 @@ class MainRepository {
         }
 
         foreach ($this->relations as $relation) {
-            if($relation['type'] == 'hasMany'){
+            if ($relation['type'] == 'hasMany') {
                 $repo = new MainRepository($relation['table']);
+                foreach ($this->subRelations[$relation['name']] as $subRel) {
+                    $repo->with($subRel);
+                }
                 $results = $repo->getAll();
-                foreach ($rows as $row ) {
-                    $currentResults = array_filter($results, function($item) use ($row, $relation){
+                foreach ($rows as $row) {
+                    $currentResults = array_filter($results, function ($item) use ($row, $relation) {
                         return $item->{$relation['foreignKey']} == $row->id;
                     });
                     $row->{$relation['attribute']} = $currentResults;
                 }
             }
-            if($relation['type'] == 'hasOne'){
+            if ($relation['type'] == 'hasOne') {
                 $repo = new MainRepository($relation['table']);
+                foreach ($this->subRelations[$relation['name']] as $subRel) {
+                    $repo->with($subRel);
+                }
                 $results = $repo->getAll();
-                foreach ($rows as $row ) {
-                    $currentResults = array_filter($results, function($item) use ($row, $relation){
+                foreach ($rows as $row) {
+                    $currentResults = array_filter($results, function ($item) use ($row, $relation) {
                         return $item->id == $row->{$relation['foreignKey']};
                     });
-                    $row->{$relation['attribute']} = count($currentResults) == 1 ? $currentResults[0] : null;
+                    $row->{$relation['attribute']} =
+                        count($currentResults) == 1 ? array_shift($currentResults) : null;
                 }
-                $row->{$relation['attribute']} = count($results) == 1 ? $results[0] : null;
+            }
+            if ($relation['type'] == 'isOne') {
+                $repo = new MainRepository($relation['table']);
+                foreach ($this->subRelations[$relation['name']] as $subRel) {
+                    $repo->with($subRel);
+                }
+                $results = $repo->getAll();
+                foreach ($rows as $row) {
+                    $currentResults = array_filter($results, function ($item) use ($row, $relation) {
+                        return $item->{$relation['foreignKey']} == $row->id;
+                    });
+                    $row->{$relation['attribute']} =
+                        count($currentResults) == 1 ? array_shift($currentResults) : null;
+                }
             }
         }
-
         return $rows;
     }
 
@@ -76,15 +96,30 @@ class MainRepository {
         }
 
         foreach ($this->relations as $relation) {
-            if($relation['type'] == 'hasMany'){
+            if ($relation['type'] == 'hasMany') {
                 $repo = new MainRepository($relation['table']);
+                foreach ($this->subRelations[$relation['name']] as $subRel) {
+                    $repo->with($subRel);
+                }
                 $results = $repo->getAll($relation['foreignKey']." = $row->id");
                 $row->{$relation['attribute']} = $results;
             }
-            if($relation['type'] == 'hasOne'){
+            if ($relation['type'] == 'hasOne') {
                 $repo = new MainRepository($relation['table']);
-                $results = $repo->getAll("id = ".$row->{$relation['foreignKey']});
-                $row->{$relation['attribute']} = count($results) == 1 ? $results[0] : null;
+                foreach ($this->subRelations[$relation['name']] as $subRel) {
+                    $repo->with($subRel);
+                }
+                $result = $repo->getOne($row->{$relation['foreignKey']});
+                $row->{$relation['attribute']} = $result;
+            }
+            if ($relation['type'] == 'isOne') {
+                $repo = new MainRepository($relation['table']);
+                foreach ($this->subRelations[$relation['name']] as $subRel) {
+                    $repo->with($subRel);
+                }
+                $results = $repo->getAll($relation['foreignKey']." = $row->id");
+                $row->{$relation['attribute']} =
+                    count($results) == 1 ? array_shift($results) : null;
             }
         }
 
@@ -130,9 +165,11 @@ class MainRepository {
         return false;
     }
 
-    function with($name){
+    function with($name, $withArray =[]){
         $relationToAdd = $this->entity::$relations[$name];
+        $relationToAdd['name'] = $name;
         array_push($this->relations, $relationToAdd);
+        $this->subRelations[$name] = $withArray;
         return $this;
     }
 
@@ -162,5 +199,31 @@ class MainRepository {
             }
         }
         return $errors;
+    }
+
+    function updateOne($fields)
+    { //TODO updateWhere
+        $set = "";
+        $valuesToBind = array();
+        $id = $fields['id'];
+        unset($fields['id']);
+        foreach ($fields as $k=>$v) {
+            $set .= $k."=?,";
+            array_push($valuesToBind, $v);
+        }
+        $set = trim($set, ",");
+        $where = "id = ?";
+        array_push($valuesToBind, $id);
+        $sql = "UPDATE $this->table SET $set WHERE $where";
+        $statment = $this->connect()->prepare($sql);
+        $result = $statment->execute($valuesToBind);
+        $test = $statment->rowCount() == 1;
+        if ($result && $test) {
+            $entityClass = $this->entity;
+            $fields['id'] = $id;
+            $entity = new $entityClass($fields);
+            return $entity;
+        }
+        return false;
     }
 }

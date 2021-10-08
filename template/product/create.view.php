@@ -14,7 +14,7 @@
     <select name="category_id" id="category_id">
         <option value="null">Choisir ...</option>
         <?php foreach($categories as $category){ ?>
-        <option value="<? $category->id ?>" <?= ($category->id == ($posted['category_id'] ?? '')) ? 'selected' : '' ?> > 
+        <option value="<?= $category->id ?>" <?= ($category->id == ($posted['category_id'] ?? '')) ? 'selected' : '' ?> > 
             <?= $category->name ?>
         </option> 
     <?php } ?>
